@@ -1,0 +1,2 @@
+# virtual-library
+The Virtual Library component for Joomla lets you create, maintain and host a Virtual Library of ebooks, reference web sites and real printed books and other types of publications. You can upload and delete ebooks and categorise your collection of ebooks so that browsing your collection is more enjoyable. You can sort them using various criteria, and ultimately, you can peruse, read and enjoy them
