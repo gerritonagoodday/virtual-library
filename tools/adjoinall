@@ -1,0 +1,74 @@
+#!/bin/bash
+# $Id: adjoinall 105 2010-12-17 11:11:05Z gerrit_hoekstra $
+# Merges all the images in the current working directory into one adjoined image
+# sized by the square of the number of images. 
+# The images are sorted in random order. Repeat this process until you get a layout 
+# that looks appealing.
+# Author: Gerrit Hoekstra gerrit@hoekstra.co.uk www.hoekstra.co.uk 2010
+# With the help of scripts by Fred Weinhaus http://www.fmwconcepts.com/imagemagick
+# License: GPL2
+#
+# Parameters: Output file name
+#             Directory of images. Optional, defaults the CWD
+
+
+# Input parameters
+[[ -z $1 ]] && echo "Usage: $0 [Output image file name] [Source image directory]" && exit;
+filedir=${2:-`pwd`}
+echo "Adjoining all images in $filedir into $1..."
+rm $1 2>/dev/null
+
+SAVEIFS=$IFS
+IFS=$(echo -en "\n\b")
+
+declare -a A
+A=(`ls $filedir/* | sort -R`)
+sqrt=$(echo "sqrt ( ${#A[*]} )" | bc -l)
+sqrt=$(echo $sqrt | sed -e "s/\..*//")
+for k in $(seq 0 10); do rm $k.png 2>/dev/null; done
+
+# global parameter to pass array around in Bash
+# Files to adjoin
+declare -a afiles
+# Partial horizontal files
+declare -a hfiles
+
+# Merge into output file
+function adjoin {
+  outfile=$@
+  num=${#afiles[*]}
+  last=$((num-1))
+  echo "Merging into $outfile: ${afiles[*]}"
+  convert ${afiles[*]} -gravity west -background none -extent x${maxh} +append $outfile
+}
+
+# Make partially horizontally merged files
+for i in $(seq 0 $((sqrt))); do  
+  afiles=()
+  maxh=0
+  for j in $(seq 0 $sqrt); do
+    [[ -z ${A[$((i*sqrt+j))]} ]] && break
+    afiles[j]=${A[$((i*sqrt+j))]}
+    # Get max height
+    height=$(convert ${afiles[j]} -ping -format "%h" info:)
+    [ $height -gt $maxh ] && maxh=$height    
+  done
+  [[ ${#afiles[@]} -eq 0 ]] && break
+  echo "Merging into $i.png: ${afiles[*]}"
+  convert ${afiles[*]} -gravity west -background none -extent x${maxh} +append $i.png
+  hfiles[$i]="$i.png"
+done
+
+echo "Final merging into $1"
+# Get width of images
+maxw=0
+for k in ${hfiles[*]}; do
+  width=$(convert $k -ping -format "%w" info:)
+  [ $width -gt $maxw ] && maxw=$width
+done	
+convert ${hfiles[*]} -gravity west -background none -extent ${maxw}x -append $1
+
+# Tidy up
+for k in ${hfiles[*]}; do rm $k 2>/dev/null; done
+IFS=$SAVEIFS
+

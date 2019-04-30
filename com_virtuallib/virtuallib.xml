@@ -1,0 +1,295 @@
+<?xml version="1.0" ?>
+<!-- $Id: virtuallib.xml 93 2009-09-08 17:26:27Z gerrit_hoekstra $ -->
+<mosinstall type="component">
+  <name>virtuallib</name>
+  <creationDate>2007.09.12</creationDate>
+  <author>Gerrit Hoekstra</author>
+  <copyright>This component in released under the GNU/GPL License</copyright>
+  <authorEmail>gerrit@hoekstra.co.uk</authorEmail>
+  <authorUrl>www.hoekstra.co.uk</authorUrl>
+  <version>0.8</version>
+  <files>
+    <filename>README.txt</filename>
+    <filename>BibTex.php</filename>
+    <filename>virtuallib.html.php</filename>
+    <filename>virtuallib.php</filename>
+    <filename>index.html</filename>
+    <filename>ebooks/ConstructionOfAnOracle10gLinuxServer-0.5.pdf</filename>
+    <filename>covers/ConstructionOfAnOracle10gLinuxServer-0.5.jpg</filename>
+    <filename>thumbs/ConstructionOfAnOracle10gLinuxServer-0.5.png</filename>
+  </files>
+  <install>
+    <queries>
+      <query>
+        DROP TABLE IF EXISTS `#__virtuallib`;
+      </query>
+      <query>
+        CREATE TABLE `#__virtuallib` (
+        `pubid` INT AUTO_INCREMENT,
+        `title` TEXT,                   -- publication title
+        `type` VARCHAR(255),            -- article, book, manual, etc..
+        `cite` VARCHAR(255),            -- your own abbreviation for the publication
+        `month` VARCHAR(255),           -- publishing month
+        `year` VARCHAR(255),            -- year published
+        `annote` TEXT,                  -- annotation
+        `booktitle` VARCHAR(255),       -- title of the book
+        `chapter` VARCHAR(255),         -- selected chapter if any
+        `pages` VARCHAR(255),           -- number of pages
+        `edition` VARCHAR(255),         -- book edition
+        `editor` VARCHAR(255),          -- name of editor
+        `eprint` VARCHAR(255),          -- relative or abolute URL of ebook
+        `howpublished` VARCHAR(255),    -- description
+        `institution` VARCHAR(255),     -- sponsoring institution
+        `journal` VARCHAR(255),         -- journal name
+        `volume` VARCHAR(255),          -- journal volumn or multi-volumn book
+        `number` VARCHAR(255),          -- number of the journal
+        `key` VARCHAR(255),             -- label for missing author or for order override
+        `note` VARCHAR(255),            -- your own note
+        `organization` VARCHAR(255),    -- organisation that sponsored the publication
+        `publisher` VARCHAR(255),       -- pulisher name
+        `address` VARCHAR(255),         -- publisher's address
+        `school` VARCHAR(255),          -- ... or academic department
+        `series` VARCHAR(255),          -- .. if it belongs to a series
+        `url` TEXT,                     -- relative or absolute URL to publication
+        `abstract` TEXT,                -- publication abstract
+        `keywords` TEXT,                --
+        `authorsnames` TEXT,            -- list of authors
+        `shortauthnames` VARCHAR(255),  --
+        `checkedout` INT DEFAULT 0,     -- item in Joomla checked out
+        `published` INT DEFAULT 0,      -- item published in Joomla
+        `viewed` INT DEFAULT 0,         -- number of detail and ebook views
+        `image` varchar(255),           -- name of front cover thumbnail in thumbs directory
+        `isbn` VARCHAR(30),             -- International Standard Book Number.
+        `issn` VARCHAR(30),             -- International Standard Serial Number for journals
+        `ddc` VARCHAR(12),              -- Dewey Decimal Classification number for the book
+        `locid` int,                    -- Location Id of physical book
+        `ordering` int,                 -- override oder of listing
+        `bibtex` text,                  -- bibtex content
+        PRIMARY KEY (pubid)
+      ) comment='Publication authors';
+      </query>
+      <query>
+        DROP TABLE IF EXISTS `#__virtuallib_auth`;
+      </query>
+      <query>
+        CREATE TABLE `#__virtuallib_auth` (
+        `id` INT,                       -- FK to #__virtuallib pubid
+        `num` INT,                      -- sequential number or publication's author
+        `first` VARCHAR(255),           -- first name
+        `von` VARCHAR(255),             -- surname prefix
+        `last` VARCHAR(255),            -- surname
+        `jr` VARCHAR(255)               -- some weird american thing
+        ) comment='Publication authors';
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_categories`;
+      </query>
+      <query>
+        create table `#__virtuallib_categories` (
+        `id` INT,
+        `categories` VARCHAR(255)
+        ) comment='Subject categories for publications';
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_location`;
+      </query>
+      <query>
+        CREATE TABLE `#__virtuallib_location` (
+        `id` INT AUTO_INCREMENT,
+        `library` varchar(100),         -- physical library name
+        `floor` varchar(20),            -- floor of the library
+        `row` varchar(20),              -- book case row
+        `case` varchar(20),             -- bookcase identifyer
+        `shelf` varchar(20),             -- shelf in book rack
+        `comment` TEXT,
+        PRIMARY KEY (id)
+        ) comment='Physical location of publication';
+      </query>
+      <!-- Insert default category -->
+      <query>
+        insert into #__categories (name,description,section,published,title)
+        values ('default','default','com_virtuallib','1','default');
+      </query>
+
+      <!-- BEGIN Example eBook -->
+      <query>
+        insert into #__virtuallib (title,type,edition,eprint,year,pages,abstract,authorsnames,shortauthnames,published,image)
+        values ('Construction of an Oracle 10g Linux Server','manual','V0.5 29SEP2005',
+                'components/com_virtuallib/ebooks/ConstructionOfAnOracle10gLinuxServer-0.5.pdf','2005','57',
+                'A step-by-step Construction Guide to build a Linux Server from scratch, how to install the Oracle 10g RDBMS in an industry-standard way on it. It also shows you how to set up the server''s network and how to configure a Linux-based and Windows-based client environment.',
+                'Gerrit Hoekstra','Gerrit Hoekstra',1,'ConstructionOfAnOracle10gLinuxServer-0.5.png');
+      </query>
+      <query>
+        insert into #__virtuallib_auth (id,num,first,von,last,jr)
+        values (1,1,'Gerrit','','Hoekstra','')
+      </query>
+      <query>
+        insert #__virtuallib_categories (id,categories)
+        select 1, max(id) from #__categories;
+      </query>
+      <!-- END Example eBook -->
+      <query>
+        DROP TABLE IF EXISTS `#__virtuallib_config`;
+      </query>
+      <query>
+        CREATE TABLE `#__virtuallib_config` (
+        `variable` VARCHAR(32),
+        `value` VARCHAR(32),
+        `id` INT AUTO_INCREMENT,
+        `type` varchar(10),        -- configuration group
+        PRIMARY KEY (id)
+        );
+      </query>
+      <!-- Configuration records -->
+      <!-- TODO: 1. Move this to install.php file and use language.php file -->
+      <!--       2. Access config -->
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('edit','on','access');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('add','on','access');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('download','on','access');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('manualinput','on','access');
+      </query>
+      <!-- frontent display config -->
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('squeeze','off','display');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('fullnames','on','display');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('etal','on','display');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('smallicons','on','display');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('formatted','off','display');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('showlogo','on','display');
+      </query>
+
+      <!-- table column display config -->
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_authors','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_title','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_publisher','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_type','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_pubdate','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_annote','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_chapter','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_edition','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_note','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_pages','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_abstract','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_cite','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_url','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_eprint','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_image','on','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_isbnissn','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_ddc','off','tab_column');
+      </query>
+      <query>
+        insert into #__virtuallib_config (variable,value,type) values ('col_loc','off','tab_column');
+      </query>
+    </queries>
+  </install>
+  <uninstall>
+    <queries>
+      <query>
+        drop table if exists `#__virtuallib`;
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_auth`;
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_bibtex`;
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_categories`;
+      </query>
+      <query>
+        drop table if exists `#__virtuallib_config`;
+      </query>
+      <query>
+        delete from #__categories where section = 'com_virtuallib';
+      </query>
+    </queries>
+  </uninstall>
+  <installfile>
+    <filename>install.virtuallib.php</filename>
+  </installfile>
+  <uninstallfile>
+    <filename>uninstall.virtuallib.php</filename>
+  </uninstallfile>
+  <administration>
+    <menu>Virtual Library</menu>
+    <submenu>
+      <menu act="view">Publications</menu>
+      <menu act="categories">Subjects</menu>
+      <menu act="config">Configuration</menu>
+      <menu act="about">About Virtual Library</menu>
+    </submenu>
+    <files>
+      <filename>admin.virtuallib.php</filename>
+      <filename>admin.virtuallib.html.php</filename>
+      <filename>files.virtuallib.php</filename>
+      <filename>files.virtuallib.html.php</filename>
+      <filename>toolbar.virtuallib.php</filename>
+      <filename>toolbar.virtuallib.html.php</filename>
+      <filename>images/logo.png</filename>
+      <filename>images/logo48x137.png</filename>
+      <filename>images/bibtex.png</filename>
+      <filename>images/virtuallib.png</filename>
+      <filename>images/virtuallib48x48.png</filename>
+      <filename>images/JoomlaLogo.png</filename>
+      <filename>icons/virtuallib.png</filename>
+      <filename>icons/virtuallibconf.png</filename>
+      <filename>language/english.messages.php</filename>
+      <filename>language/germani.messages.php</filename>
+      <filename>language/germanf.messages.php</filename>
+      <filename>includes/constants.php</filename>
+    </files>
+  </administration>
+  <params>
+    <param name="catid" type="mos_category" default="0" scope="com_virtuallib" label="Category" description="Shows publications from the selected category only" />
+  </params>
+</mosinstall>
